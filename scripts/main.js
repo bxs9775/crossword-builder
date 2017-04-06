@@ -270,6 +270,10 @@ app.main = {
         
         console.log("loading wordlists");
         app.dictionaries.loadLists();
+        while(app.dictionaries.threads == 0){
+            
+        }
+        console.log("load thread reached");
         while(app.dictionaries.threads > 0){
             
         }
