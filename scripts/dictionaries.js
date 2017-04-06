@@ -80,7 +80,7 @@ app.dictionaries = {
                     list.concat(currList);
                     this.threads--;
                     
-                    if(threads < 1){
+                    if(this.threads < 1){
                         this.finalList = app.dictionaries.resolveList(list);
                     }
                 };

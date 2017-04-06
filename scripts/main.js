@@ -252,6 +252,8 @@ app.main = {
     },
     
     parseGrid: function(string){
+        app.dictionaries.loadLists();
+        
         var gridRows = string.split("\n");
         var dimensions = gridRows[0].split(",");
         var rows = parseInt(dimensions[0]);
@@ -268,17 +270,10 @@ app.main = {
         
         this.setGridHTML(app.main.startingGrid);
         
-        console.log("loading wordlists");
-        app.dictionaries.loadLists();
-        while(app.dictionaries.threads == 0){
-            
-        }
-        console.log("load thread reached");
-        while(app.dictionaries.threads > 0){
+        while(app.dictionaries.threads != 0){
             
         }
         this.dictionary = app.dictionaries.finalList;
-        console.log("done loading");
         console.dir(this.dictionary);
     },
     
