@@ -7,10 +7,11 @@ var app = app || {};
 app.main = {
     ///-----fields-----////
     SPECIAL_CHARS: Object.freeze({
-        EMPTY: " ",
-        BLACK: "."
+        EMPTY: ".",
+        BLACK: "*"
     }),
     words: [],
+    dictionary: undefined,
     
     
     ///-----other files-----////
@@ -22,10 +23,13 @@ app.main = {
         this.loc = startLoc;
         this.across = across;
         this.possibleWords = [];
+        this.numPossible = 0;
         
         //update methods
         this.updateWords = function(){
             /*implementation needed*/
+            this.possibleWords = dictionary.match(pattern+"\i");
+            this.numPossible = this.possibleWords.length;
         };
         this.changeLetter = function(letter,index){
             this.pattern[index] = letter;
@@ -151,5 +155,20 @@ app.main = {
     ///-----control functions-----///
     setup: function(){
         
+    },
+    
+    ///-----helper methods-----///
+    getMostRestrainedWord: function(){
+        var max = Number.MAX_SAFE_INTEGER;
+        var lowest = Number.MAX_SAFE_INTEGER;
+        var word = undefined;
+        for(var i = 0; i < words.length;i++){
+            var length = words[i].numPossible;
+            if(length < lowest || (length === lowest && length === max)){
+                word = words[i];
+                lowest = length;
+            }
+        }
+        return word;
     }
 };
