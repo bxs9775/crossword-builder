@@ -32,3 +32,8 @@ td{
 #dictionaryBox div{
     text-align: center;
 }
+
+#dictionaryBox label{
+    padding-left: 8px;
+    padding-right: 8px;
+}

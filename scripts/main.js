@@ -35,18 +35,18 @@ app.main = {
         //update methods
         this.updateWords = function(){
             /*implementation needed*/
-            this.possibleWords = dictionary.match("^"+pattern+"$\i");
+            this.possibleWords = app.main.dictionary.match(pattern);
             this.numPossible = this.possibleWords.length;
         };
         this.changeLetter = function(letter,index){
             this.pattern[index] = letter;
         };
         this.copy = function(){
-            return (new word(this.pattern,this.loc,this.length,this.across));
+            return (new app.main.word(this.pattern,this.loc,this.length,this.across));
         }
     },
-    spot: function(){
-        this.letter = this.SPECIAL_CHARS.EMPTY;
+    spot: function(letter){
+        this.letter = letter;
         this.acrossWord = -1;
         this.acrossIndex = -1;
         this.downWord = -1;
@@ -74,19 +74,24 @@ app.main = {
     grid: function(rows, cols, array){
         this.rows = rows;
         this.cols = cols;
-        this.array = array//[];
+        this.array = array;//[];
         this.html = document.createElement("table");
         for(var i = 0; i < rows; i++){
+            //var arrayRow = array;
             var htmlRow = document.createElement("tr");
             for(var j = 0; j < cols; j++){
+                //var arraySpot = new app.main.spot(array[i][j]);
+                //arrayRow.push(arraySpot);
+                
                 var cell = document.createElement("td");
-                if(array[i][j] == app.main.SPECIAL_CHARS.BLACK){
+                if(array[i][j].letter == app.main.SPECIAL_CHARS.BLACK){
                     cell.style.backgroundColor = "black";
-                }else if(array[i][j] != app.main.SPECIAL_CHARS.EMPTY){
-                    cell.textContent = array[i][j];
+                }else if(array[i][j].letter != app.main.SPECIAL_CHARS.EMPTY){
+                    cell.textContent = array[i][j].letter;
                 }
                 htmlRow.appendChild(cell);
             }
+            //this.array.push(arrayRow);
             this.html.appendChild(htmlRow);
         }
         //setup functions
@@ -96,28 +101,40 @@ app.main = {
         this.createWordList = function(){
             var listIndex = 0;
             //find across words
-            for(var i = 1; i <= this.rows;i++){
+            for(var i = 0; i < this.rows;i++){
                 var start = 0;
                 var length = 0;
                 var pattern = "";
                 for(var j = 0; j < this.cols;j++){
-                    if(array[i][j] == this.SPECIAL_CHARS.BLACK){
+                    var letter = this.array[i][j].letter;
+                    if(letter == app.main.SPECIAL_CHARS.BLACK){
                        if(length > 0){
                            var loc = {
                                x: start,
                                y: i
                            };
-                           var word = new this.word(pattern,loc,length,true);
+                           var word = new app.main.word(pattern,loc,length,true);
                            this.addWord(word,listIndex);
                            listIndex++;
                            length = 0;
                            pattern = "";
+                           app.main.words.push(word);
                        }
                         start = j+1;
                     }else{
                         length++;
-                        pattern += this.SPECIAL_CHARS.EMPTY;
+                        pattern += letter;
                     }
+                }
+                
+                if(length > 0){
+                    var loc = {
+                        x: start,
+                        y: i
+                    };
+                    var word = new app.main.word(pattern,loc,length,true);
+                    this.addWord(word,listIndex);
+                    app.main.words.push(word);
                 }
             }
             //find down words
@@ -126,23 +143,34 @@ app.main = {
                 var length = 0;
                 var pattern = "";
                 for(var j = 0; j < this.cols;j++){
-                    if(array[j][i] == this.SPECIAL_CHARS.BLACK){
+                    var letter = this.array[i][j].letter;
+                    if(letter == app.main.SPECIAL_CHARS.BLACK){
                        if(length > 0){
                            var loc = {
                                x: i,
                                y: start
                            };
-                           var word = new this.word(pattern,loc,length,true);
+                           var word = new app.main.word(pattern,loc,length,false);
                            this.addWord(word,listIndex);
                            listIndex++;
                            length = 0;
                            pattern = "";
+                           app.main.words.push(word);
                        }
                         start = j+1;
                     }else{
                         length++;
-                        pattern += this.SPECIAL_CHARS.EMPTY;
+                        pattern += letter;
                     }
+                }
+                if(length > 0){
+                    var loc = {
+                        x: i,
+                        y: start
+                    };
+                    var word = new app.main.word(pattern,loc,length,false);
+                    this.addWord(word,listIndex);
+                    app.main.words.push(word);
                 }
             }
         };
@@ -151,7 +179,7 @@ app.main = {
             word.updateWords();
             var y = word.loc.y, x = word.loc.x;
             for(var i = 0; i < word.length; i++){
-                array[y][x].setWord(listIndex,i,word.across);
+                this.array[y][x].setWord(listIndex,i,word.across);
                 if(word.across){
                     x++;
                 }else{
@@ -163,7 +191,8 @@ app.main = {
         this.fillWord = function(word,text){
             var x = word.loc.x, y = word.loc.y;
             for(var i = 0; i < word.length;i++){
-                grid[x][y].addLetter(text[i]);
+                this.array[y][x].addLetter(text[i]);
+                this.html[y][x].textContent = text[i];
                 if(word.across){
                     x++;
                 }else{
@@ -178,7 +207,7 @@ app.main = {
         };
         
         this.copy = function(){
-            return new this.grid(this.rows,this.cols,this.array);
+            return new app.main.grid(this.rows,this.cols,this.array);
         }
     },
     
@@ -211,9 +240,9 @@ app.main = {
     },
     
     solveStep: function(grid,words){
-        setGridHTML(grid);
+        this.setGridHTML(grid);
         
-        var nextWord = this.getMostRestrainedWord();
+        var nextWord = this.getMostRestrainedWord(words);
         var wordList = nextWord.possibleWords;
         
         for(var i = 0; i < wordList.length; i++){
@@ -249,6 +278,7 @@ app.main = {
         for(var i = 0; i < array.length;i++){
             newArray.push(array[i].copy());
         }
+        return newArray;
     },
     
     parseGrid: function(string){
@@ -262,30 +292,37 @@ app.main = {
         for(var i = 1; i <= rows; i++){
             var gridRow = [];
             for(var j = 0; j < cols; j++){
-                gridRow.push(gridRows[i][j]);
+                var newSpot = new this.spot(gridRows[i][j]);
+                gridRow.push(newSpot);
             }
             grid.push(gridRow);
         }
-        this.startingGrid = new app.main.grid(rows,cols,grid);
         
-        this.setGridHTML(app.main.startingGrid);
+        this.startingGrid = new app.main.grid(rows,cols,grid);
     },
     
     setDictionary: function(dict){
-        console.log("setting dict");
+        //console.log("setting dict");
         this.dictionary = dict;
-        console.dir(this.dictionary);
+        this.startingGrid.createWordList();
+        //console.dir(this.dictionary);
+        
+        this.setGridHTML(this.startingGrid);
+        
+        var gridCpy = this.startingGrid.copy();
+        var wordsCpy = this.copyWordsArray(this.words);
+        var result = this.solveStep(gridCpy,wordsCpy);
     },
     
     setGridHTML: function(grid){
-        if(this.gridElement.hasChildNodes()){
+        while(this.gridElement.hasChildNodes()){
             var child = this.gridElement.firstChild;
             this.gridElement.removeChild(child);
         }
         this.gridElement.appendChild(grid.html);
     },
     
-    getMostRestrainedWord: function(){
+    getMostRestrainedWord: function(words){
         var max = Number.MAX_SAFE_INTEGER;
         var lowest = Number.MAX_SAFE_INTEGER;
         var word = undefined;
