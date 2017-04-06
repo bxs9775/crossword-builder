@@ -1,3 +1,6 @@
+//Handles loading dictionaries
+"use strict";
+
 var app = app || {};
 
 app.dictionaries = {
@@ -12,8 +15,6 @@ app.dictionaries = {
     
     ///-----control functions-----///
     setup: function(){
-        
-        //console.log("setting up dictionary options");
         this.dictElement = document.querySelector("#listOptions");
         while(this.dictElement.hasChildNodes()){
             var child = this.dictElement.firstChild;
@@ -22,7 +23,6 @@ app.dictionaries = {
         
         var xhr = new XMLHttpRequest();
         xhr.onload = function(){
-            //console.log("XHP loaded");
             var response = xhr.responseText;
             var dictArr = response.split("\n");
             
