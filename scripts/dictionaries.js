@@ -13,7 +13,9 @@ app.dictionaries = {
         this.isUsed = isUsed;
     },
     finalList: undefined,
-    threads: 0,
+    filesToLoad: -1,
+    filesLoaded: -1,
+    //loaded: false,
     
     ///-----control functions-----///
     setup: function(){
@@ -26,29 +28,8 @@ app.dictionaries = {
         var xhr = new XMLHttpRequest();
         xhr.onload = function(){
             var response = xhr.responseText;
-            var dictArr = response.split("\n");
-            
-            for(var i = 0; i < dictArr.length;i++){
-                var entry = dictArr[i].split(",");
-                var valid = (entry[1][0]=="t");
-                app.dictionaries.dictList.push(new app.dictionaries.dictEntry(entry[0],valid));
-                
-                //create checkbox
-                var checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.checked = valid;
-                checkbox.onchange = app.dictionaries.createCheckFunction(i);
-                
-                //create label
-                var span = document.createElement("span");
-                span.textContent = entry[0];
-                var label = document.createElement("label");
-                label.appendChild(checkbox);
-                label.appendChild(span);
-                
-                //append label to dict List
-                app.dictionaries.dictElement.appendChild(label);
-            }
+            app.dictionaries.loadOptions(response);
+            //console.log(app.dictionaries.dictList);
         };
         
         var listURL = "lists/dictionaryList.txt";
@@ -63,29 +44,91 @@ app.dictionaries = {
         xhr.send();
     },
     
+    loadOptions: function(string){
+        var dictArr = string.split("\n");
+        
+        for(var i = 0; i < dictArr.length;i++){
+            var entry = dictArr[i].split(",");
+            var valid = (entry[1][0]=="t");
+            var listItem = new this.dictEntry(entry[0],valid);
+            /*
+            var listItem = Object.freeze({
+                name: entry[0],
+                isUsed: valid
+            });
+            */
+            this.dictList.push(listItem);
+            //console.dir(listItem);
+            //console.log(this.dictList);
+            
+            //create checkbox
+            var checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = valid;
+            checkbox.onchange = this.createCheckFunction(i);
+            
+            //create label
+            var span = document.createElement("span");
+            span.textContent = entry[0];
+            var label = document.createElement("label");
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            
+            //append label to dict List
+            this.dictElement.appendChild(label);
+        }
+    },
+    
     //returns the lists used in the crossword
     loadLists: function(){
+        //console.dir(this);
+        //console.dir(this.dictList);
+        //console.dir(this.dictList[0]);
+        //console.dir(this.dictList[0].name);
+        
         var list = [];
-        this.threads = 0;
-        for(var i = 0; i < this.dictList.lenght; i++){
+        this.filesToLoad = 0;
+        for(var i = 0; i < this.dictList.length; i++){
+            if(this.dictList[i].isUsed){
+                this.filesToLoad++;
+            }
+        }
+        
+        if(this.filesToLoad === 0){
+            //this.loaded = true;
+            return;
+        }
+        
+        this.filesLoaded = 0;
+        //console.log(this.filesToLoad);
+        //console.log(this.filesLoaded);
+        
+        for(var i = 0; i < this.dictList.length; i++){
             var dict = this.dictList[i];
+            console.dir(dict);
             if(dict.isUsed){
-                this.threads++;
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function(){
                     var response = xhr.responseText;
+                    //console.dir(xhr);
                     var currList = response.split("\n");
                     
                     //Will this cause race conditions?
                     list.concat(currList);
-                    this.threads--;
+                    app.dictionaries.filesLoaded++;
+                    //console.log(app.dictionaries.filesLoaded);
                     
-                    if(this.threads < 1){
-                        this.finalList = app.dictionaries.resolveList(list);
+                    if(app.dictionaries.filesToLoad === app.dictionaries.filesLoaded){
+                        app.dictionaries.finalList = app.dictionaries.resolveList(list);
+                        //this.loaded = true;
+                        app.main.setDictionary(app.dictionaries.finalList);
+                        app.dictionaries.filesToLoad = -1;
+                        app.dictionaries.filesLoaded = -1;
                     }
                 };
                 
                 var listURL = "lists/"+dict.name;
+                console.log(listURL);
                 
                 //open request
                 xhr.open("GET",listURL,true);
@@ -108,6 +151,7 @@ app.dictionaries = {
         if(list.length > 1){
             list = this.uniqueList(list);
         }
+        console.dir(list);
         return list.join("\n");
     },
     
@@ -115,7 +159,7 @@ app.dictionaries = {
     uniqueList: function(list){
         var tempList = [];
         for(var i = 0; i < list.length;i++){
-            if(!tempList.contains(list[i])){
+            if(!(tempList.contains(list[i]))){
                 tempList.push(list[i]);
             }
         }

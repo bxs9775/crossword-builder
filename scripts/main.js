@@ -270,11 +270,17 @@ app.main = {
         
         this.setGridHTML(app.main.startingGrid);
         
-        while(app.dictionaries.threads != 0){
+        /*
+        while(!app.dictionaries.loaded){
             
         }
-        this.dictionary = app.dictionaries.finalList;
+        */
+    },
+    
+    setDictionary: function(dict){
+        this.dictionary = dict;
         console.dir(this.dictionary);
+        //app.dictionaries.loaded = false;
     },
     
     setGridHTML: function(grid){
