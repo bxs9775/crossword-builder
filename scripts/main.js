@@ -77,7 +77,11 @@ app.main = {
             var htmlRow = document.createElement("tr");
             for(var j = 0; j < cols; j++){
                 var cell = document.createElement("td");
-                cell.textContent = array[i][j];
+                if(array[i][j] == app.main.SPECIAL_CHARS.BLACK){
+                    cell.style.backgroundColor = "black";
+                }else if(array[i][j] != app.main.SPECIAL_CHARS.EMPTY){
+                    cell.textContent = array[i][j];
+                }
                 htmlRow.appendChild(cell);
             }
             this.html.appendChild(htmlRow);
@@ -171,35 +175,38 @@ app.main = {
         this.fileText = document.querySelector("#fileText");
         
         document.querySelector("#loadButton").onclick = function(){
-            this.setupElement.style.display = "none";
-            this.creatorElement.style.display = "block";
-            
-            var gridURL = "grids\\" + this.fileText.value + ".txt";
-            
-            var xhr = new XMLHttpRequest();
-            
-            xhr.onload = function(){
-                var response = xhr.responseText;
-                var responseLines = response.split("\n");
-                var dimensions = responseLines[0].split(",");
-                var rows = parseInt(dimensions[0]);
-                var cols = parseInt(dimensions[1]);
-                var grid = [];
-                for(var i = 1; i <= rows; i++){
-                    var gridRow = [];
-                    for(var j = 0; j < cols; j++){
-                        gridRow.push(responseLines[i][j]);
-                    }
-                    grid.push(gridRow);
-                }
-                app.main.startingGrid = new app.main.grid(rows,cols,grid);
+            var file = this.fileText.value;
+            if(file != ""){
+                this.setupElement.style.display = "none";
+                this.creatorElement.style.display = "block";
                 
-                app.main.setGridHTML(app.main.startingGrid);
+                var gridURL = "grids\\" + file + ".txt";
+                
+                var xhr = new XMLHttpRequest();
+                
+                xhr.onload = function(){
+                    var response = xhr.responseText;
+                    var responseLines = response.split("\n");
+                    var dimensions = responseLines[0].split(",");
+                    var rows = parseInt(dimensions[0]);
+                    var cols = parseInt(dimensions[1]);
+                    var grid = [];
+                    for(var i = 1; i <= rows; i++){
+                        var gridRow = [];
+                        for(var j = 0; j < cols; j++){
+                            gridRow.push(responseLines[i][j]);
+                        }
+                        grid.push(gridRow);
+                    }
+                    app.main.startingGrid = new app.main.grid(rows,cols,grid);
+                    
+                    app.main.setGridHTML(app.main.startingGrid);
+                }
+                
+                xhr.open("GET",gridURL,true);
+                
+                xhr.send();
             }
-            
-            xhr.open("GET",gridURL,true);
-            
-            xhr.send();
         }.bind(this);
     },
     
