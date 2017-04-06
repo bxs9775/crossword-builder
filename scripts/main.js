@@ -247,18 +247,18 @@ app.main = {
         
         for(var i = 0; i < wordList.length; i++){
             grid.fillWord(nextWord,wordlist[i]);
-            if(this.crosswordFilled){
-                return true;
+            if(this.crosswordFilled(grid)){
+                return grid;
             }
             var gridCpy = grid.copy();
             var wordsCpy = word.copy();
             var result = this.solveStep(gridCpy,wordsCpy);
-            if(result){
-                return true;
+            if(result != undefined){
+                return result;
             }
         }
         
-        return false;
+        return undefined;
     },
     
     crosswordFilled: function(grid){
