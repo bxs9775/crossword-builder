@@ -88,9 +88,6 @@ app.dictionaries = {
                 //open request
                 xhr.open("GET",listURL,true);
                 
-                //set headers - mostly in case I run this on banjo
-                xhr.setRequestHeader("If-Modified-Since", "Sat, 1 Jan 2010 00:00:00 GMT");
-                
                 //send request
                 xhr.send();
             }
@@ -101,7 +98,6 @@ app.dictionaries = {
     //creates a function for a checkbox
     createCheckFunction: function(i){
         return function(e){
-            console.log(i);
             app.dictionaries.dictList[i].isUsed = e.target.value;
         };
     },
