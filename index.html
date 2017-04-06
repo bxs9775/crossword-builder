@@ -13,6 +13,14 @@
     <body>
         <section id="setup">
             <h2>Crossword Creation Set-up: </h2>
+            <div id="dictionaryBox">
+                <label>Dictionary options:
+                    <div  id="listOptions">
+                        <label><input type="checkbox" checked>ospd.txt</label>
+                        <label><input type="checkbox">web2.txt</label>
+                    </div>
+                </label>
+            </div>
             <label>Starting file: <input id="fileText" type="text" name="file"></label>
             <button id="loadButton">Load File</button>
         </section>
@@ -21,12 +29,6 @@
             <!--Buttions for running the script and going back to setup-->
             <div id="controls">
             </div>
-            <label><h3>Dictionary options: </h3>
-                <div  id="listOptions">
-                    <label><input type="checkbox" checked>ospd.txt</label>
-                    <label><input type="checkbox">web2.txt</label>
-                </div>
-            </label>
             
             <!--Table keeps the grid of characters.-->
             <div id="gridElement">

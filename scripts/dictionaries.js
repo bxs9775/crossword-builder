@@ -12,6 +12,8 @@ app.dictionaries = {
         this.name = name;
         this.isUsed = isUsed;
     },
+    finalList: undefined,
+    threads: 0,
     
     ///-----control functions-----///
     setup: function(){
@@ -62,13 +64,13 @@ app.dictionaries = {
     },
     
     //returns the lists used in the crossword
-    getLists: function(){
+    loadLists: function(){
         var list = [];
-        var threads = 0;
+        this.threads = 0;
         for(var i = 0; i < this.dictList.lenght; i++){
             var dict = this.dictList[i];
             if(dict.isUsed){
-                threads++;
+                this.threads++;
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function(){
                     var response = xhr.responseText;
@@ -76,10 +78,10 @@ app.dictionaries = {
                     
                     //Will this cause race conditions?
                     list.concat(currList);
-                    threads--;
+                    this.threads--;
                     
-                    if(threads == 0){
-                        return app.dictionaries.resolveList(list);
+                    if(threads < 1){
+                        this.finalList = app.dictionaries.resolveList(list);
                     }
                 };
                 

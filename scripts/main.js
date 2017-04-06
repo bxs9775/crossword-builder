@@ -27,6 +27,7 @@ app.main = {
     word: function(pattern,startLoc,length,across){
         this.pattern = pattern;
         this.loc = startLoc;
+        this.length = length;
         this.across = across;
         this.possibleWords = [];
         this.numPossible = 0;
@@ -34,13 +35,15 @@ app.main = {
         //update methods
         this.updateWords = function(){
             /*implementation needed*/
-            this.possibleWords = dictionary.match(pattern+"\i");
+            this.possibleWords = dictionary.match("^"+pattern+"$\i");
             this.numPossible = this.possibleWords.length;
         };
         this.changeLetter = function(letter,index){
             this.pattern[index] = letter;
-            this.updateWords();
         };
+        this.copy = function(){
+            return (new word(this.pattern,this.loc,this.length,this.across));
+        }
     },
     spot: function(){
         this.letter = this.SPECIAL_CHARS.EMPTY;
@@ -144,8 +147,8 @@ app.main = {
             }
         };
         
-        //other methods
         this.addWord = function(word,listIndex){
+            word.updateWords();
             var y = word.loc.y, x = word.loc.x;
             for(var i = 0; i < word.length; i++){
                 array[y][x].setWord(listIndex,i,word.across);
@@ -156,6 +159,18 @@ app.main = {
                 }
             }
         };
+        //other methods
+        this.fillWord = function(word,text){
+            var x = word.loc.x, y = word.loc.y;
+            for(var i = 0; i < word.length;i++){
+                grid[x][y].addLetter(text[i]);
+                if(word.across){
+                    x++;
+                }else{
+                    y++;
+                }
+            }
+        }
         
         this.changeLetter = function(letter,x,y){
             array[y][x].addLetter(letter);
@@ -185,22 +200,7 @@ app.main = {
                 var xhr = new XMLHttpRequest();
                 
                 xhr.onload = function(){
-                    var response = xhr.responseText;
-                    var responseLines = response.split("\n");
-                    var dimensions = responseLines[0].split(",");
-                    var rows = parseInt(dimensions[0]);
-                    var cols = parseInt(dimensions[1]);
-                    var grid = [];
-                    for(var i = 1; i <= rows; i++){
-                        var gridRow = [];
-                        for(var j = 0; j < cols; j++){
-                            gridRow.push(responseLines[i][j]);
-                        }
-                        grid.push(gridRow);
-                    }
-                    app.main.startingGrid = new app.main.grid(rows,cols,grid);
-                    
-                    app.main.setGridHTML(app.main.startingGrid);
+                    app.main.parseGrid(xhr.responseText);
                 }
                 
                 xhr.open("GET",gridURL,true);
@@ -210,9 +210,75 @@ app.main = {
         }.bind(this);
     },
     
+    solveStep: function(grid,words){
+        setGridHTML(grid);
+        
+        var nextWord = this.getMostRestrainedWord();
+        var wordList = nextWord.possibleWords;
+        
+        for(var i = 0; i < wordList.length; i++){
+            grid.fillWord(nextWord,wordlist[i]);
+            if(this.crosswordFilled){
+                return true;
+            }
+            var gridCpy = grid.copy();
+            var wordsCpy = word.copy();
+            var result = this.solveStep(gridCpy,wordsCpy);
+            if(result){
+                return true;
+            }
+        }
+        
+        return false;
+    },
+    
+    crosswordFilled: function(grid){
+        for(var i = 0; i < grid.rows; i++){
+            for(var j = 0; j < grid.cols; j++){
+                if(grid[i][j].letter == this.SPECIAL_CHARS.EMPTY){
+                    return false;
+                }
+            }
+        }
+        return true;
+    },
+    
     ///-----helper methods-----///
+    copyWordsArray(array){
+        var newArray = [];
+        for(var i = 0; i < array.length;i++){
+            newArray.push(array[i].copy());
+        }
+    },
+    
+    parseGrid: function(string){
+        var gridRows = string.split("\n");
+        var dimensions = gridRows[0].split(",");
+        var rows = parseInt(dimensions[0]);
+        var cols = parseInt(dimensions[1]);
+        var grid = [];
+        for(var i = 1; i <= rows; i++){
+            var gridRow = [];
+            for(var j = 0; j < cols; j++){
+                gridRow.push(gridRows[i][j]);
+            }
+            grid.push(gridRow);
+        }
+        this.startingGrid = new app.main.grid(rows,cols,grid);
+        
+        this.setGridHTML(app.main.startingGrid);
+        
+        console.log("loading wordlists");
+        app.dictionaries.loadLists();
+        while(app.dictionaries.threads > 0){
+            
+        }
+        this.dictionary = app.dictionaries.finalList;
+        console.log("done loading");
+        console.dir(this.dictionary);
+    },
+    
     setGridHTML: function(grid){
-        console.dir(grid.html);
         if(this.gridElement.hasChildNodes()){
             var child = this.gridElement.firstChild;
             this.gridElement.removeChild(child);

@@ -21,3 +21,14 @@ td{
     text-align: center;
     vertical-align: middle;
 }
+
+#dictionaryBox{
+    width: 50%;
+    border: 2px solid black;
+    margin: 4px;
+    padding: 4px;
+}
+
+#dictionaryBox div{
+    text-align: center;
+}
