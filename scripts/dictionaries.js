@@ -29,7 +29,6 @@ app.dictionaries = {
         xhr.onload = function(){
             var response = xhr.responseText;
             app.dictionaries.loadOptions(response);
-            //console.log(app.dictionaries.dictList);
         };
         
         var listURL = "lists/dictionaryList.txt";
@@ -58,8 +57,6 @@ app.dictionaries = {
             });
             */
             this.dictList.push(listItem);
-            //console.dir(listItem);
-            //console.log(this.dictList);
             
             //create checkbox
             var checkbox = document.createElement("input");
@@ -81,10 +78,6 @@ app.dictionaries = {
     
     //returns the lists used in the crossword
     loadLists: function(){
-        //console.dir(this);
-        //console.dir(this.dictList);
-        //console.dir(this.dictList[0]);
-        //console.dir(this.dictList[0].name);
         
         var list = [];
         this.filesToLoad = 0;
@@ -100,21 +93,17 @@ app.dictionaries = {
         }
         
         this.filesLoaded = 0;
-        //console.log(this.filesToLoad);
-        //console.log(this.filesLoaded);
         
         for(var i = 0; i < this.dictList.length; i++){
             var dict = this.dictList[i];
-            console.dir(dict);
             if(dict.isUsed){
                 var xhr = new XMLHttpRequest();
                 xhr.onload = function(){
                     var response = xhr.responseText;
-                    //console.dir(xhr);
                     var currList = response.split("\n");
                     
                     //Will this cause race conditions?
-                    list.concat(currList);
+                    list = list.concat(currList);
                     app.dictionaries.filesLoaded++;
                     //console.log(app.dictionaries.filesLoaded);
                     
@@ -128,7 +117,7 @@ app.dictionaries = {
                 };
                 
                 var listURL = "lists/"+dict.name;
-                console.log(listURL);
+                //console.log(listURL);
                 
                 //open request
                 xhr.open("GET",listURL,true);
@@ -151,7 +140,7 @@ app.dictionaries = {
         if(list.length > 1){
             list = this.uniqueList(list);
         }
-        console.dir(list);
+        //console.dir(list);
         return list.join("\n");
     },
     
@@ -159,7 +148,7 @@ app.dictionaries = {
     uniqueList: function(list){
         var tempList = [];
         for(var i = 0; i < list.length;i++){
-            if(!(tempList.contains(list[i]))){
+            if(!(tempList.includes(list[i]))){
                 tempList.push(list[i]);
             }
         }

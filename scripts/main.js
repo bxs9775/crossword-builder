@@ -269,18 +269,12 @@ app.main = {
         this.startingGrid = new app.main.grid(rows,cols,grid);
         
         this.setGridHTML(app.main.startingGrid);
-        
-        /*
-        while(!app.dictionaries.loaded){
-            
-        }
-        */
     },
     
     setDictionary: function(dict){
+        console.log("setting dict");
         this.dictionary = dict;
         console.dir(this.dictionary);
-        //app.dictionaries.loaded = false;
     },
     
     setGridHTML: function(grid){
