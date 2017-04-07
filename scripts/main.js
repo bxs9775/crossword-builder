@@ -274,8 +274,8 @@ app.main = {
                 return grid;
             }
             
-            var wordsCpy = this.copyWordsArray(this.words);
-            var gridCpy = this.startingGrid.copy(wordsCpy);
+            var wordsCpy = this.copyWordsArray(words);
+            var gridCpy = grid.copy(wordsCpy);
             gridCpy.updateAll();
             var result = this.solveStep(gridCpy,wordsCpy);
             if(result != undefined){
