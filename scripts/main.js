@@ -24,14 +24,21 @@ app.main = {
     dictionaries: undefined, //Handled by loader.js
     
     ///-----constructor functions-----///   
-    word: function(pattern,startLoc,length,across){
+    //function constructor for a word in the crossword
+    //params:
+    //  pattern - the word or unfilled pattern used in a regex search
+    //  startLoc - the x and y cooridinates of the first space occupied by the word in the grid
+    //  length - how long the word is
+    //  across - true if the word is an across word, false if the word is down
+    //  visited - has this word been visited
+    word: function(pattern,startLoc,length,across,visited=false){
         this.pattern = pattern;
         this.loc = startLoc;
         this.length = length;
         this.across = across;
         this.possibleWords = [];
         this.numPossible = 0;
-        this.filled = false;
+        this.visited = visited;
         
         //update methods
         this.updateWords = function(){
@@ -48,7 +55,7 @@ app.main = {
             this.pattern = this.pattern.substr(0,index)+letter+this.pattern.substr(index+1);
         };
         this.copy = function(){
-            return Object.seal(new app.main.word(this.pattern,this.loc,this.length,this.across));
+            return Object.seal(new app.main.word(this.pattern,this.loc,this.length,this.across,this.filled));
         }
     },
     spot: function(letter){
@@ -253,18 +260,20 @@ app.main = {
     solveStep: function(grid,words){
         this.setGridHTML(grid);
         
-        var nextWord = this.getMostRestrainedWord(words);
+        var nextIndex = this.getMostRestrainedWord(words);
+        var nextWord = words[nextIndex];
         if(nextWord == undefined){
             return undefined;
         }
         var wordList = nextWord.possibleWords;
+        words[nextIndex].visited = true;
         
         for(var i = 0; i < wordList.length; i++){
-            nextWord.filled = true;
-            grid.fillWord(nextWord,words[i]);
+            grid.fillWord(nextWord,wordList[i]);
             if(this.crosswordFilled(grid)){
                 return grid;
             }
+            
             var wordsCpy = this.copyWordsArray(this.words);
             var gridCpy = this.startingGrid.copy(wordsCpy);
             gridCpy.updateAll();
@@ -345,19 +354,19 @@ app.main = {
     getMostRestrainedWord: function(words){
         var max = Number.MAX_SAFE_INTEGER;
         var lowest = Number.MAX_SAFE_INTEGER;
-        var word = undefined;
+        var wordInd = undefined;
         for(var i = 0; i < words.length;i++){
             var length = words[i].numPossible;
             //Would quit if we expected the program to fill the whole grid by itself
             //But continuing allows the solver to fill in most of the grid even if there are sections the user must fill in themselves
-            if(words[i].filled || length == 0){
+            if(words[i].visited || length == 0){
                 continue;
             }
             if(length < lowest || (length === lowest && length === max)){
-                word = words[i];
+                wordInd = i;
                 lowest = length;
             }
         }
-        return word;
+        return wordInd;
     }
 };
