@@ -31,6 +31,7 @@ app.main = {
         this.across = across;
         this.possibleWords = [];
         this.numPossible = 0;
+        this.filled = false;
         
         //update methods
         this.updateWords = function(){
@@ -44,10 +45,10 @@ app.main = {
             }
         };
         this.changeLetter = function(letter,index){
-            this.pattern[index] = letter;
+            this.pattern = this.pattern.substr(0,index)+letter+this.pattern.substr(index+1);
         };
         this.copy = function(){
-            return (new app.main.word(this.pattern,this.loc,this.length,this.across));
+            return Object.seal(new app.main.word(this.pattern,this.loc,this.length,this.across));
         }
     },
     spot: function(letter){
@@ -69,7 +70,7 @@ app.main = {
         };
         this.addLetter = function(letter,wordlist){
             if(this.acrossWord != -1 && this.acrossIndex != -1){
-                wordlist[this.arossWord].changeLetter(letter,this.acrossIndex);
+                wordlist[this.acrossWord].changeLetter(letter,this.acrossIndex);
             }
             if(this.downWord != -1 && this.downIndex != -1){
                 wordlist[this.downWord].changeLetter(letter,this.downIndex);
@@ -86,9 +87,6 @@ app.main = {
             //var arrayRow = array;
             var htmlRow = document.createElement("tr");
             for(var j = 0; j < cols; j++){
-                //var arraySpot = new app.main.spot(array[i][j]);
-                //arrayRow.push(arraySpot);
-                
                 var cell = document.createElement("td");
                 if(array[i][j].letter == app.main.SPECIAL_CHARS.BLACK){
                     cell.style.backgroundColor = "black";
@@ -119,7 +117,7 @@ app.main = {
                                x: start,
                                y: i
                            };
-                           var word = new app.main.word(pattern,loc,length,true);
+                           var word = Object.seal(new app.main.word(pattern,loc,length,true));
                            this.addWord(word,listIndex);
                            listIndex++;
                            length = 0;
@@ -138,7 +136,7 @@ app.main = {
                         x: start,
                         y: i
                     };
-                    var word = new app.main.word(pattern,loc,length,true);
+                    var word = Object.seal(new app.main.word(pattern,loc,length,true));
                     this.addWord(word,listIndex);
                     this.wordlist.push(word);
                 }
@@ -156,7 +154,7 @@ app.main = {
                                x: i,
                                y: start
                            };
-                           var word = new app.main.word(pattern,loc,length,false);
+                           var word = Object.seal(new app.main.word(pattern,loc,length,false));
                            this.addWord(word,listIndex);
                            listIndex++;
                            length = 0;
@@ -174,7 +172,7 @@ app.main = {
                         x: i,
                         y: start
                     };
-                    var word = new app.main.word(pattern,loc,length,false);
+                    var word = Object.seal(new app.main.word(pattern,loc,length,false));
                     this.addWord(word,listIndex);
                     app.main.words.push(word);
                 }
@@ -204,7 +202,7 @@ app.main = {
             var x = word.loc.x, y = word.loc.y;
             for(var i = 0; i < word.length;i++){
                 this.array[y][x].addLetter(text[i],this.wordlist);
-                this.html[y][x].textContent = text[i];
+                this.html.children[y].children[x].textContent = text[i];
                 if(word.across){
                     x++;
                 }else{
@@ -219,7 +217,7 @@ app.main = {
         };
         
         this.copy = function(wordlist=this.wordlist){
-            return new app.main.grid(this.rows,this.cols,this.array,wordlist);
+            return Object.seal(new app.main.grid(this.rows,this.cols,this.array,wordlist));
         }
     },
 
@@ -262,7 +260,8 @@ app.main = {
         var wordList = nextWord.possibleWords;
         
         for(var i = 0; i < wordList.length; i++){
-            grid.fillWord(nextWord,wordlist[i]);
+            nextWord.filled = true;
+            grid.fillWord(nextWord,words[i]);
             if(this.crosswordFilled(grid)){
                 return grid;
             }
@@ -281,7 +280,7 @@ app.main = {
     crosswordFilled: function(grid){
         for(var i = 0; i < grid.rows; i++){
             for(var j = 0; j < grid.cols; j++){
-                if(grid[i][j].letter == this.SPECIAL_CHARS.EMPTY){
+                if(grid.array[i][j].letter == this.SPECIAL_CHARS.EMPTY){
                     return false;
                 }
             }
@@ -309,13 +308,13 @@ app.main = {
         for(var i = 1; i <= rows; i++){
             var gridRow = [];
             for(var j = 0; j < cols; j++){
-                var newSpot = new this.spot(gridRows[i][j]);
+                var newSpot = Object.seal(new this.spot(gridRows[i][j]));
                 gridRow.push(newSpot);
             }
             grid.push(gridRow);
         }
         
-        this.startingGrid = new app.main.grid(rows,cols,grid,this.words);
+        this.startingGrid = Object.seal(new app.main.grid(rows,cols,grid,this.words));
     },
     
     setDictionary: function(dict){
@@ -349,12 +348,10 @@ app.main = {
         var word = undefined;
         for(var i = 0; i < words.length;i++){
             var length = words[i].numPossible;
-            //Added for the use of puzzles that break Amarican conventions
-            if(words[i].length == 1){
+            //Would quit if we expected the program to fill the whole grid by itself
+            //But continuing allows the solver to fill in most of the grid even if there are sections the user must fill in themselves
+            if(words[i].filled || length == 0){
                 continue;
-            }
-            if(length == 0){
-                return undefined;
             }
             if(length < lowest || (length === lowest && length === max)){
                 word = words[i];

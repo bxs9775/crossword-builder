@@ -1,4 +1,4 @@
-ospd.txt,f
+ospd.txt,t
 web2.txt,f
-week.txt,t
-basic-animals.txt,t
+week.txt,f
+basic-animals.txt,f
