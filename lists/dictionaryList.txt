@@ -1,3 +1,4 @@
 ospd.txt,f
 web2.txt,f
 week.txt,t
+basic-animals.txt,t

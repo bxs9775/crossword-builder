@@ -12,6 +12,7 @@ app.dictionaries = {
         this.name = name;
         this.isUsed = isUsed;
     },
+    list: [],
     finalList: undefined,
     filesToLoad: -1,
     filesLoaded: -1,
@@ -79,7 +80,7 @@ app.dictionaries = {
     //returns the lists used in the crossword
     loadLists: function(){
         
-        var list = [];
+        this.list = [];
         this.filesToLoad = 0;
         for(var i = 0; i < this.dictList.length; i++){
             if(this.dictList[i].isUsed){
@@ -103,16 +104,16 @@ app.dictionaries = {
                     var currList = response.split("\n");
                     
                     //Will this cause race conditions?
-                    list = list.concat(currList);
+                    app.dictionaries.list = app.dictionaries.list.concat(currList);
                     app.dictionaries.filesLoaded++;
                     //console.log(app.dictionaries.filesLoaded);
                     
                     if(app.dictionaries.filesToLoad === app.dictionaries.filesLoaded){
-                        app.dictionaries.finalList = app.dictionaries.resolveList(list);
+                        app.dictionaries.finalList = app.dictionaries.resolveList(app.dictionaries.list);
                         //this.loaded = true;
-                        app.main.setDictionary(app.dictionaries.finalList);
                         app.dictionaries.filesToLoad = -1;
                         app.dictionaries.filesLoaded = -1;
+                        app.main.setDictionary(app.dictionaries.finalList);
                     }
                 };
                 
@@ -132,7 +133,7 @@ app.dictionaries = {
     //creates a function for a checkbox
     createCheckFunction: function(i){
         return function(e){
-            app.dictionaries.dictList[i].isUsed = e.target.value;
+            app.dictionaries.dictList[i].isUsed = e.target.checked;
         };
     },
     

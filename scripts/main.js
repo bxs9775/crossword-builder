@@ -16,7 +16,6 @@ app.main = {
         EMPTY: ".",
         BLACK: "*"
     }),
-    words: [],
     dictionary: undefined,
     startingGrid: undefined,
     
@@ -35,8 +34,13 @@ app.main = {
         //update methods
         this.updateWords = function(){
             /*implementation needed*/
-            this.possibleWords = app.main.dictionary.match(pattern);
-            this.numPossible = this.possibleWords.length;
+            var regExp = new RegExp("^"+pattern+"$","igm");
+            this.possibleWords = app.main.dictionary.match(regExp);
+            if(this.possibleWords != null){
+                this.numPossible = this.possibleWords.length;
+            }else{
+                this.numPossible = 0;
+            }
         };
         this.changeLetter = function(letter,index){
             this.pattern[index] = letter;
@@ -243,6 +247,9 @@ app.main = {
         this.setGridHTML(grid);
         
         var nextWord = this.getMostRestrainedWord(words);
+        if(nextWord == undefined){
+            return undefined;
+        }
         var wordList = nextWord.possibleWords;
         
         for(var i = 0; i < wordList.length; i++){
@@ -328,6 +335,9 @@ app.main = {
         var word = undefined;
         for(var i = 0; i < words.length;i++){
             var length = words[i].numPossible;
+            if(length == 0){
+                return undefined;
+            }
             if(length < lowest || (length === lowest && length === max)){
                 word = words[i];
                 lowest = length;
