@@ -18,11 +18,12 @@ app.main = {
     }),
     dictionary: undefined,
     startingGrid: undefined,
+    words: [],
     
     ///-----other files-----////
     dictionaries: undefined, //Handled by loader.js
     
-    ///-----constructor functions-----///
+    ///-----constructor functions-----///   
     word: function(pattern,startLoc,length,across){
         this.pattern = pattern;
         this.loc = startLoc;
@@ -66,19 +67,20 @@ app.main = {
                 this.downIndex = index;
             }
         };
-        this.addLetter = function(letter){
+        this.addLetter = function(letter,wordlist){
             if(this.acrossWord != -1 && this.acrossIndex != -1){
-                this.words[this.arossWord].changeLetter(letter,this.acrossIndex);
+                wordlist[this.arossWord].changeLetter(letter,this.acrossIndex);
             }
             if(this.downWord != -1 && this.downIndex != -1){
-                this.words[this.downWord].changeLetter(letter,this.downIndex);
+                wordlist[this.downWord].changeLetter(letter,this.downIndex);
             }
         };
     },
-    grid: function(rows, cols, array){
+    grid: function(rows, cols, array, wordlist=app.main.words){
         this.rows = rows;
         this.cols = cols;
         this.array = array;//[];
+        this.wordlist = wordlist;
         this.html = document.createElement("table");
         for(var i = 0; i < rows; i++){
             //var arrayRow = array;
@@ -122,7 +124,7 @@ app.main = {
                            listIndex++;
                            length = 0;
                            pattern = "";
-                           app.main.words.push(word);
+                           this.wordlist.push(word);
                        }
                         start = j+1;
                     }else{
@@ -138,7 +140,7 @@ app.main = {
                     };
                     var word = new app.main.word(pattern,loc,length,true);
                     this.addWord(word,listIndex);
-                    app.main.words.push(word);
+                    this.wordlist.push(word);
                 }
             }
             //find down words
@@ -180,7 +182,6 @@ app.main = {
         };
         
         this.addWord = function(word,listIndex){
-            word.updateWords();
             var y = word.loc.y, x = word.loc.x;
             for(var i = 0; i < word.length; i++){
                 this.array[y][x].setWord(listIndex,i,word.across);
@@ -191,11 +192,18 @@ app.main = {
                 }
             }
         };
+        
+        this.updateAll = function(){
+            for(var i = 0; i < this.wordlist.length;i++){
+                this.wordlist[i].updateWords();
+            }
+        };
+        
         //other methods
         this.fillWord = function(word,text){
             var x = word.loc.x, y = word.loc.y;
             for(var i = 0; i < word.length;i++){
-                this.array[y][x].addLetter(text[i]);
+                this.array[y][x].addLetter(text[i],this.wordlist);
                 this.html[y][x].textContent = text[i];
                 if(word.across){
                     x++;
@@ -206,14 +214,15 @@ app.main = {
         }
         
         this.changeLetter = function(letter,x,y){
-            array[y][x].addLetter(letter);
+            array[y][x].addLetter(letter,this.wordlist);
             html[y][x].textContent = letter;
         };
         
-        this.copy = function(){
-            return new app.main.grid(this.rows,this.cols,this.array);
+        this.copy = function(wordlist=this.wordlist){
+            return new app.main.grid(this.rows,this.cols,this.array,wordlist);
         }
     },
+
     
     ///-----control functions-----///
     setup: function(){
@@ -257,8 +266,9 @@ app.main = {
             if(this.crosswordFilled(grid)){
                 return grid;
             }
-            var gridCpy = grid.copy();
-            var wordsCpy = word.copy();
+            var wordsCpy = this.copyWordsArray(this.words);
+            var gridCpy = this.startingGrid.copy(wordsCpy);
+            gridCpy.updateAll();
             var result = this.solveStep(gridCpy,wordsCpy);
             if(result != undefined){
                 return result;
@@ -305,7 +315,7 @@ app.main = {
             grid.push(gridRow);
         }
         
-        this.startingGrid = new app.main.grid(rows,cols,grid);
+        this.startingGrid = new app.main.grid(rows,cols,grid,this.words);
     },
     
     setDictionary: function(dict){
@@ -316,9 +326,13 @@ app.main = {
         
         this.setGridHTML(this.startingGrid);
         
-        var gridCpy = this.startingGrid.copy();
         var wordsCpy = this.copyWordsArray(this.words);
+        var gridCpy = this.startingGrid.copy(wordsCpy);
+        gridCpy.updateAll();
         var result = this.solveStep(gridCpy,wordsCpy);
+        if(result != undefined){
+            this.setGridHTML(result);
+        }
     },
     
     setGridHTML: function(grid){
@@ -335,6 +349,10 @@ app.main = {
         var word = undefined;
         for(var i = 0; i < words.length;i++){
             var length = words[i].numPossible;
+            //Added for the use of puzzles that break Amarican conventions
+            if(words[i].length == 1){
+                continue;
+            }
             if(length == 0){
                 return undefined;
             }
